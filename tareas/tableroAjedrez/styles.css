@@ -1,0 +1,30 @@
+/* Estilos generales para la tabla y celdas */
+table, td {
+    border: 2px solid blue; /* Establece un borde azul alrededor de la tabla y las celdas */
+    border-collapse: collapse; /* Combina los bordes adyacentes de la tabla */
+}
+
+td {
+    width: 50px; /* Ancho de cada celda */
+    height: 50px; /* Altura de cada celda */
+    margin: 0 auto; /* Centra el contenido dentro de la celda (no tiene efecto en celdas) */
+    padding: 0; /* Elimina el padding para que la imagen ocupe toda la celda */
+}
+
+/* Estilo para las celdas blancas */
+td.blanca {
+    background-color: white; /* Color de fondo blanco para las celdas blancas */
+}
+
+/* Estilo para las celdas grises */
+td.gris {
+    background-color: #EEEEEE; /* Color de fondo gris claro para las celdas grises */
+}
+
+/* Estilo para las imágenes dentro de las celdas */
+img {
+    opacity: 0.3; /* Establece la opacidad de las imágenes al 30% para dar un efecto de transparencia */
+    width: 100%; /* Hace que la imagen ocupe el 100% del ancho de la celda */
+    height: 100%; /* Hace que la imagen ocupe el 100% de la altura de la celda */
+    margin: 0; /* Elimina el margen alrededor de la imagen */
+}
