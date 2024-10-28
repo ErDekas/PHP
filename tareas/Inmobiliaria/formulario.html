@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Vivienda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #f4f4f9, #e0e0e0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        form label {
+            font-weight: bold;
+            color: #333;
+            margin: 5px 0;
+            display: block;
+        }
+
+        form select, 
+        form input[type="text"], 
+        form input[type="number"], 
+        form input[type="file"], 
+        form textarea {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        form input[type="radio"],
+        form input[type="checkbox"] {
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .radio-group, 
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        form textarea {
+            height: 50px;
+            resize: none;
+        }
+
+        form input[type="submit"] {
+            background-color: #45a049;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        form input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <form action="vivienda.php" method="post" enctype="multipart/form-data">
+        <label for="tipoVivienda">Tipo de vivienda:</label>
+        <select name="tipoVivienda" id="tipoVivienda" required>
+            <option value="1">Piso</option>
+            <option value="2">Adosado</option>
+            <option value="3">Chalet</option>
+            <option value="4">Casa</option>
+        </select>
+
+        <label for="zonaVivienda">Zona:</label>
+        <select name="zonaVivienda" id="zonaVivienda" required>
+            <option value="1">Centro</option>
+            <option value="2">Zaidin</option>
+            <option value="3">Chana</option>
+            <option value="4">Albaicín</option>
+            <option value="5">Sacromonte</option>
+            <option value="6">Realejo</option>
+        </select>
+
+        <label for="direccionVivienda">Dirección:</label>
+        <input type="text" name="direccionVivienda" id="direccionVivienda" required>
+
+        <label>Número de dormitorios:</label>
+        <div class="radio-group">
+            <input type="radio" name="dormitorios" id="uno" value="1" required><label for="uno">1</label>
+            <input type="radio" name="dormitorios" id="dos" value="2"><label for="dos">2</label>
+            <input type="radio" name="dormitorios" id="tres" value="3"><label for="tres">3</label>
+            <input type="radio" name="dormitorios" id="cuatro" value="4"><label for="cuatro">4</label>
+            <input type="radio" name="dormitorios" id="cinco" value="5"><label for="cinco">5</label>
+        </div>
+
+        <label for="precioVivienda">Precio (€):</label>
+        <input type="number" name="precioVivienda" id="precioVivienda" min="0" required>
+
+        <label for="tamanoVivienda">Tamaño (m²):</label>
+        <input type="number" name="tamanoVivienda" id="tamanoVivienda" min="0" required>
+
+        <label>Extras:</label>
+        <div class="checkbox-group">
+            <input type="checkbox" name="extras[]" id="piscina" value="Piscina"><label for="piscina">Piscina</label>
+            <input type="checkbox" name="extras[]" id="jardin" value="Jardín"><label for="jardin">Jardín</label>
+            <input type="checkbox" name="extras[]" id="garaje" value="Garaje"><label for="garaje">Garaje</label>
+        </div>
+
+        <label for="fotosVivienda">Foto:</label>
+        <input type="file" name="fotosVivienda" id="fotosVivienda" accept="image/*" required>
+
+        <label for="observacion">Observaciones:</label>
+        <textarea name="observacion" id="observacion"></textarea>
+
+        <input type="submit" value="Insertar">
+    </form>
+</body>
+</html>
