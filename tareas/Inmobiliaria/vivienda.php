@@ -11,23 +11,49 @@ define('DATA_FILE', 'viviendas.json');
 // Sanitizar y validar los datos del formulario
 $tipoVivienda = filter_input(INPUT_POST, 'tipoVivienda', FILTER_SANITIZE_NUMBER_INT);
 $zonaVivienda = filter_input(INPUT_POST, 'zonaVivienda', FILTER_SANITIZE_NUMBER_INT);
-$direccionVivienda = htmlspecialchars($_POST['direccionVivienda'] ?? '', ENT_QUOTES, 'UTF-8');
+$direccionVivienda = htmlspecialchars(trim($_POST['direccionVivienda'] ?? ''), ENT_QUOTES, 'UTF-8');
 $dormitorios = filter_input(INPUT_POST, 'dormitorios', FILTER_SANITIZE_NUMBER_INT);
 $precioVivienda = filter_input(INPUT_POST, 'precioVivienda', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 $tamanoVivienda = filter_input(INPUT_POST, 'tamanoVivienda', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-$extras = $_POST['extras'] ?? []; // Capturar correctamente el array de extras
-$observacion = htmlspecialchars($_POST['observacion'] ?? '', ENT_QUOTES, 'UTF-8');
+$extras = $_POST['extras'] ?? [];
+$observacion = htmlspecialchars(trim($_POST['observacion'] ?? ''), ENT_QUOTES, 'UTF-8');
 
 // Validación de campos
 $errores = [];
-if (empty($tipoVivienda)) $errores[] = "Debe seleccionar un tipo de vivienda.";
-if (empty($zonaVivienda)) $errores[] = "Debe seleccionar una zona.";
-if (empty($direccionVivienda)) $errores[] = "La dirección es obligatoria.";
-if (empty($dormitorios)) $errores[] = "Debe seleccionar el número de dormitorios.";
-if (empty($precioVivienda) || !is_numeric($precioVivienda)) $errores[] = "El precio debe ser un número.";
-if (empty($tamanoVivienda) || !is_numeric($tamanoVivienda)) $errores[] = "El tamaño debe ser un número.";
 
-// Manejo de la subida de la foto
+// Validar tipo de vivienda
+if (empty($tipoVivienda) || !filter_var($tipoVivienda, FILTER_VALIDATE_INT)) {
+    $errores[] = "Debe seleccionar un tipo de vivienda válido.";
+}
+
+// Validar zona de vivienda
+if (empty($zonaVivienda) || !filter_var($zonaVivienda, FILTER_VALIDATE_INT)) {
+    $errores[] = "Debe seleccionar una zona válida.";
+}
+
+// Validar dirección
+if (empty($direccionVivienda)) {
+    $errores[] = "La dirección es obligatoria.";
+} elseif (strlen($direccionVivienda) < 5 || strlen($direccionVivienda) > 100) {
+    $errores[] = "La dirección debe tener entre 5 y 100 caracteres.";
+}
+
+// Validar número de dormitorios
+if (empty($dormitorios) || !filter_var($dormitorios, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]])) {
+    $errores[] = "Debe seleccionar un número de dormitorios válido.";
+}
+
+// Validar precio
+if (empty($precioVivienda) || !filter_var($precioVivienda, FILTER_VALIDATE_FLOAT) || $precioVivienda <= 0) {
+    $errores[] = "El precio debe ser un número positivo.";
+}
+
+// Validar tamaño
+if (empty($tamanoVivienda) || !filter_var($tamanoVivienda, FILTER_VALIDATE_FLOAT) || $tamanoVivienda <= 0) {
+    $errores[] = "El tamaño debe ser un número positivo.";
+}
+
+// Validar foto
 $foto = '';
 if (!empty($_FILES['fotosVivienda']['name'])) {
     $foto = UPLOAD_DIR . basename($_FILES['fotosVivienda']['name']);
@@ -35,18 +61,28 @@ if (!empty($_FILES['fotosVivienda']['name'])) {
     $fotoTmp = $_FILES['fotosVivienda']['tmp_name'];
     $fotoExt = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
 
-    // Validación de tamaño y tipo de archivo
+    // Validar tamaño y tipo de archivo
     if ($fotoSize > 100000) {
         $errores[] = "La foto no debe exceder de 100 KB.";
     }
     if (!in_array($fotoExt, ['jpg', 'jpeg', 'png', 'gif'])) {
-        $errores[] = "El formato de la foto no es válido.";
+        $errores[] = "El formato de la foto no es válido. Solo se permiten JPG, JPEG, PNG o GIF.";
     }
-    
+
+    // Verificar errores de la carga del archivo
+    if ($_FILES['fotosVivienda']['error'] !== UPLOAD_ERR_OK) {
+        $errores[] = "Error al subir la foto. Código de error: " . $_FILES['fotosVivienda']['error'];
+    }
+
     // Si no hay errores, mover la foto a la carpeta
     if (empty($errores) && !move_uploaded_file($fotoTmp, $foto)) {
-        $errores[] = "Error al subir la foto.";
+        $errores[] = "Error al mover la foto al directorio de destino.";
     }
+}
+
+// Validar el array de extras (opcional, si se requiere validación específica)
+if (!is_array($extras)) {
+    $errores[] = "Los extras deben ser un formato válido.";
 }
 
 // Si hay errores, mostrarlos y detener la ejecución
@@ -71,7 +107,7 @@ $datos = [
     'dormitorios' => $dormitorios,
     'precioVivienda' => $precioVivienda,
     'tamanoVivienda' => $tamanoVivienda,
-    'extras' => implode(', ', array_map('htmlspecialchars', (array)$extras)), // Procesar el array de extras
+    'extras' => implode(', ', array_map('htmlspecialchars', (array)$extras)),
     'foto' => $foto,
     'observacion' => $observacion,
     'ganancia' => $ganancia
