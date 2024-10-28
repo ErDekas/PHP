@@ -5,8 +5,15 @@ if (!is_dir(UPLOAD_DIR)) {
     mkdir(UPLOAD_DIR, 0777, true);
 }
 
-// Definir el archivo JSON donde se guardarán los datos
-define('DATA_FILE', 'viviendas.json');
+// Definir el archivo XML donde se guardarán los datos
+define('DATA_FILE', 'viviendas.xml');
+
+// Verificar si el archivo XML existe, si no, crear uno vacío
+if (!file_exists(DATA_FILE)) {
+    $xml = new SimpleXMLElement('<viviendas></viviendas>');
+    $xml->asXML(DATA_FILE);
+}
+
 
 // Sanitizar y validar los datos del formulario
 $tipoVivienda = filter_input(INPUT_POST, 'tipoVivienda', FILTER_SANITIZE_NUMBER_INT);
@@ -99,32 +106,28 @@ if (!empty($errores)) {
 // Calcular las ganancias basadas en la zona y tamaño
 $ganancia = calcularGanancia($zonaVivienda, $tamanoVivienda, $precioVivienda);
 
-// Guardar la información en un archivo JSON
-$datos = [
-    'tipoVivienda' => $tipoVivienda,
-    'zonaVivienda' => $zonaVivienda,
-    'direccionVivienda' => $direccionVivienda,
-    'dormitorios' => $dormitorios,
-    'precioVivienda' => $precioVivienda,
-    'tamanoVivienda' => $tamanoVivienda,
-    'extras' => implode(', ', array_map('htmlspecialchars', (array)$extras)),
-    'foto' => $foto,
-    'observacion' => $observacion,
-    'ganancia' => $ganancia
-];
-
-// Leer los datos existentes del archivo JSON
-$viviendas = [];
-if (file_exists(DATA_FILE)) {
-    $contenido = file_get_contents(DATA_FILE);
-    $viviendas = json_decode($contenido, true) ?? [];
+// Crear el documento XML si no existe
+if (!file_exists(DATA_FILE)) {
+    $xml = new SimpleXMLElement('<viviendas/>');
+} else {
+    $xml = simplexml_load_file(DATA_FILE);
 }
 
-// Agregar los nuevos datos al array
-$viviendas[] = $datos;
+// Añadir la nueva vivienda al XML
+$vivienda = $xml->addChild('vivienda');
+$vivienda->addChild('tipoVivienda', $tipoVivienda);
+$vivienda->addChild('zonaVivienda', $zonaVivienda);
+$vivienda->addChild('direccionVivienda', $direccionVivienda);
+$vivienda->addChild('dormitorios', $dormitorios);
+$vivienda->addChild('precioVivienda', $precioVivienda);
+$vivienda->addChild('tamanoVivienda', $tamanoVivienda);
+$vivienda->addChild('extras', implode(', ', array_map('htmlspecialchars', (array)$extras)));
+$vivienda->addChild('foto', $foto);
+$vivienda->addChild('observacion', $observacion);
+$vivienda->addChild('ganancia', $ganancia);
 
-// Guardar los datos actualizados en el archivo JSON
-file_put_contents(DATA_FILE, json_encode($viviendas, JSON_PRETTY_PRINT));
+// Guardar el XML actualizado
+$xml->asXML(DATA_FILE);
 
 // Función para calcular la ganancia
 function calcularGanancia($zona, $tamano, $precio) {
