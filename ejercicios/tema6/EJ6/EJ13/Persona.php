@@ -1,6 +1,5 @@
 <?php
-// Archivo: Persona.php
-abstract class Persona
+abstract class Persona extends Trabajador
 {
     protected string $nombre;
     protected string $apellidos;
@@ -20,24 +19,16 @@ abstract class Persona
         return $this->nombre . ' ' . $this->apellidos;
     }
 
-    // Getter y setter para la edad
+    // Getter para la edad
     public function getEdad(): int
     {
         return $this->edad;
     }
 
-    public function setEdad(int $edad): void
-    {
-        $this->edad = $edad;
-    }
-
-    // Método mágico __toString() para mostrar las propiedades
+    // Método mágico __toString() para mostrar las propiedades básicas de Persona
     public function __toString(): string
     {
         return "<p><strong>Nombre:</strong> " . $this->getNombreCompleto() . "<br>" .
             "<strong>Edad:</strong> " . $this->getEdad() . "</p>";
     }
-
-    // Método abstracto toHtml que debe implementarse en las clases hijas
-    abstract public static function toHtml(Persona $p): string;
 }

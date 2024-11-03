@@ -76,4 +76,34 @@ echo Empleado::toHtml($empleado);
 // Verificar si debe pagar impuestos
 echo $empleado->debePagarImpuestos() ? "Debe pagar impuestos" : "No debe pagar impuestos";
 
+
+// Ejemplo de uso
+$empleado = new Empleado("Juan", "Pérez", 25, 4000);
+$empleado->anyadirTelefono(123456789);
+$empleado->anyadirTelefono(987654321);
+
+// Mostrar la información del empleado usando __toString()
+echo $empleado;
+
+
+// Ejemplo de uso
+$empleado = new Empleado("Juan", "Pérez", 25, 4000);
+$empleado->anyadirTelefono(123456789);
+$empleado->anyadirTelefono(987654321);
+
+// Mostrar la información del empleado usando toHtml()
+echo Empleado::toHtml($empleado);
+
+
+// Ejemplo de uso
+$empleado = new Empleado("Juan", "Pérez", 25, 20.5, 160);  // sueldoPorHora = 20.5, horasTrabajadas = 160
+$gerente = new Gerente("Ana", "García", 40, 3000);  // salarioBase = 3000
+
+$empleado->anyadirTelefono(123456789);
+$gerente->anyadirTelefono(987654321);
+
+echo Empleado::toHtml($empleado);
+echo Gerente::toHtml($gerente);
+
+
 ?>

@@ -1,12 +1,12 @@
 <?php
-// Archivo: Persona.php
-abstract class Persona
+require_once 'JSerializable.php';
+
+abstract class Persona implements JSerializable
 {
     protected string $nombre;
     protected string $apellidos;
     protected int $edad;
 
-    // Constructor de Persona
     public function __construct(string $nombre, string $apellidos, int $edad)
     {
         $this->nombre = $nombre;
@@ -14,13 +14,11 @@ abstract class Persona
         $this->edad = $edad;
     }
 
-    // Getter para el nombre completo
     public function getNombreCompleto(): string
     {
         return $this->nombre . ' ' . $this->apellidos;
     }
 
-    // Getter y setter para la edad
     public function getEdad(): int
     {
         return $this->edad;
@@ -31,13 +29,27 @@ abstract class Persona
         $this->edad = $edad;
     }
 
-    // Método mágico __toString() para mostrar las propiedades
+    abstract public static function toHtml(Persona $p): string;
+
     public function __toString(): string
     {
         return "<p><strong>Nombre:</strong> " . $this->getNombreCompleto() . "<br>" .
             "<strong>Edad:</strong> " . $this->getEdad() . "</p>";
     }
 
-    // Método abstracto toHtml que debe implementarse en las clases hijas
-    abstract public static function toHtml(Persona $p): string;
+    // Implementación del método toJSON
+    public function toJSON(): string
+    {
+        $mapa = new stdClass();
+        foreach ($this as $clave => $valor) {
+            $mapa->$clave = $valor;
+        }
+        return json_encode($mapa);
+    }
+
+    // Implementación del método toSerialize
+    public function toSerialize(): string
+    {
+        return serialize($this);
+    }
 }
