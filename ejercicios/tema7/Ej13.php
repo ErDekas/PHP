@@ -37,8 +37,8 @@ header("Refresh: 10");
 <body>
     <?php
     // Mostrar la fecha y hora actual
-    setlocale(LC_TIME, 'es_ES.UTF-8');
-    echo "<h1>" . strftime("%A, %d de %B de %Y, a las %H:%M:%S") . "</h1>";
+    $formater = new IntlDateFormatter('es_ES', IntlDateFormatter::FULL, IntlDateFormatter::FULL, 'Europe/Madrid', IntlDateFormatter::GREGORIAN, "EEEE, d 'de' MMMM 'de' yyyy, 'a las' HH:mm:ss");
+    echo "<h1>" . $formater->format(new DateTime()) . "</h1>";
     ?>
 
     <p>Con la función <strong>header()</strong> hemos especificado que esta página no se guarde en la memoria caché, sino que se llame a sí misma desde el servidor cada 10 segundos. Puedes comprobarlo dejando la página sin actualizar durante 10 segundos o pulsando sobre Actualizar.</p>
