@@ -1,0 +1,103 @@
+/* Estilo general */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #121212; /* Fondo oscuro */
+    color: #e0e0e0; /* Texto claro */
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Títulos */
+h1, h2 {
+    color: #ffffff; /* Blanco puro para títulos */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Formulario */
+form {
+    background-color: #1e1e1e; /* Fondo más claro para destacar */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Etiquetas y select */
+label {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+select {
+    background-color: #282828; /* Fondo del dropdown */
+    color: #e0e0e0; /* Texto del dropdown */
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    outline: none;
+}
+
+select option {
+    background-color: #121212; /* Fondo oscuro para opciones */
+    color: #e0e0e0;
+}
+
+/* Botón */
+button {
+    background-color: #6200ea; /* Morado elegante */
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #3700b3; /* Más oscuro al pasar el mouse */
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    max-width: 600px;
+    border-collapse: collapse;
+    margin: 20px auto;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+thead {
+    background-color: #333333; /* Fondo para encabezado */
+    color: #ffffff;
+}
+
+th, td {
+    padding: 10px 15px;
+    text-align: center;
+    border: 1px solid #444444;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #2a2a2a; /* Alternar colores en las filas */
+}
+
+tbody tr:hover {
+    background-color: #3d3d3d; /* Resaltar fila al pasar el mouse */
+}
