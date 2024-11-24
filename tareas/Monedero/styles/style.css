@@ -1,0 +1,184 @@
+/* Importar fuente desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* Aplicar la fuente a todo el documento */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Estilo para la tabla */
+table {
+    width: 100%;
+    max-width: 800px; /* Limita el ancho */
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra elegante */
+    margin-bottom: 20px;
+}
+
+/* Bordes y celdas */
+th, 
+td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+    transition: background-color 0.3s ease; /* Animación al pasar el mouse */
+}
+
+/* Encabezados */
+th {
+    background-color: #6c63ff; /* Color morado */
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Filas alternas */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Hover en las filas */
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Formularios: clases .campos */
+.campos {
+    background-color: #ffffff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Títulos de los formularios */
+.campos h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Etiquetas */
+.campos label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Campos de entrada */
+.campos input[type="text"],
+.campos input[type="date"],
+.campos input[type="number"] {
+    width: 100%;
+    padding: 10px 5px 10px 5px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+/* Placeholder y foco */
+.campos input::placeholder {
+    color: #aaa;
+}
+
+.campos input:focus {
+    border-color: #6c63ff; /* Color morado suave */
+    box-shadow: 0 0 5px rgba(108, 99, 255, 0.5);
+    outline: none;
+}
+
+/* Botones: clase .botones */
+.botones {
+    display: flex;
+    padding: 10px;
+    justify-content: center;
+}
+
+.botones button {
+    background-color: #6c63ff; /* Color principal */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.botones button:hover {
+    background-color: #5548c8;
+    transform: scale(1.05);
+}
+
+.botones button:active {
+    background-color: #4438a5;
+}
+
+/* Botón cancelar (enlaces dentro de botones) */
+.botones a {
+    display: inline-block;
+    color: #999;
+    text-decoration: none;
+    margin-top: 10px;
+    font-size: 14px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+}
+
+.botones a:hover {
+    color: #333;
+    background-color: #f1f1f1;
+}
+
+/* Estilo para botones adicionales */
+.botones .editar {
+    background-color: #2196F3; /* Azul */
+}
+
+.botones .editar:hover {
+    background-color: #1e88e5;
+}
+
+.botones .borrar {
+    background-color: #f44336; /* Rojo */
+}
+
+.botones .borrar:hover {
+    background-color: #e53935;
+}
+
+.confirmacion {
+    background-color: #6c63ff; /* Color principal */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
