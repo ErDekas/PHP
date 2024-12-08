@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /salon/
+
+    # Si el archivo o directorio existe, se sirve normalmente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirige todo lo demás a index.php con el formato esperado
+    RewriteRule ^(.*)$ index.php?action=$1 [QSA,L]
+
+    php_flag display_startup_errors off
+    php_flag display_errors off
+    php_flag html_errors off
+</IfModule>

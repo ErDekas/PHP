@@ -1,0 +1,17 @@
+{
+    "name": "pable/salon",
+    "autoload": {
+        "psr-4": {
+            "Pable\\Salon\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ErDekas",
+            "email": "pabletor0505@gmail.com"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^6.9"
+    }
+}
