@@ -279,7 +279,7 @@ $action = $_GET['action'] ?? 'home';
             case 'asignar_empleado':
             ?>
                 <div class="container">
-                    <h1 class="text-center mb-4">Asignar Empleado a Cita</h1>
+                    <h1 class="text-center mb-4">Asignar / Reasignar Empleado a Cita</h1>
                     <div class="card">
                         <div class="card-body">
                             <?php

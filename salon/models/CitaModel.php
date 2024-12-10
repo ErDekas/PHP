@@ -413,18 +413,34 @@ class CitaModel
     // Método para obtener empleados
     public function obtenerEmpleados()
     {
-        $sql = "SELECT nombre FROM usuarios WHERE rol = 'empleado'";
+        $sql = "SELECT id, nombre FROM empleados WHERE activo = 1";
         $result = $this->db->query($sql);
-        return $result->fetch_all(MYSQLI_ASSOC);
+
+        if ($result->num_rows > 0) {
+            return $result->fetch_all(MYSQLI_ASSOC); // Devolver un array asociativo
+        } else {
+            return []; // Si no hay empleados, devolver un array vacío
+        }
     }
 
     // Método para asignar empleado a una cita
     public function asignarEmpleadoACita($citaId, $empleadoId)
     {
-        $sql = "UPDATE citas SET empleado_id = ?, estado = 'asignada' WHERE id = ?";
+        // Verificar que los valores no estén vacíos
+        if (empty($citaId) || empty($empleadoId)) {
+            return false;
+        }
+
+        // Actualizar la cita con el nuevo empleado
+        $sql = "UPDATE citas SET empleado_id = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('ii', $empleadoId, $citaId);
-        return $stmt->execute();
+
+        if ($stmt->execute()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function obtenerServicios()

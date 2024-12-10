@@ -1,20 +1,23 @@
 <?php
-class EmpleadoModel {
+class EmpleadoModel
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->db = new mysqli('localhost', 'root', '', 'belleza');
         if ($this->db->connect_error) {
             throw new Exception("Error de conexión: " . $this->db->connect_error);
         }
     }
 
-    public function registrarEmpleado($nombre, $especialidad, $correo, $telefono, $activo, $usuario_id) {
+    public function registrarEmpleado($nombre, $especialidad, $correo, $telefono, $activo, $usuario_id)
+    {
         $sql = "INSERT INTO empleados (nombre, especialidad, correo, telefono, activo) 
                 VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('ssssi', $nombre, $especialidad, $correo, $telefono, $activo);
-        
+
         if ($stmt->execute()) {
             // Relacionar al empleado con el usuario en la tabla `usuarios`
             $empleado_id = $this->db->insert_id;
@@ -24,61 +27,112 @@ class EmpleadoModel {
         return false;
     }
 
-    public function actualizarEmpleadoId($usuarioId, $empleadoId) {
+    public function actualizarEmpleadoId($usuarioId, $empleadoId)
+    {
         $sql = "UPDATE usuarios SET empleado_id = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('ii', $empleadoId, $usuarioId);
         return $stmt->execute();
     }
 
-    public function buscarEmpleadoDisponible($especialidad = null, $fecha_hora = null) {
-        $sql = "SELECT e.* FROM empleados e 
-                WHERE e.activo = 1";
-        
-        $params = [];
-        $types = '';
-    
-        if ($especialidad) {
-            $sql .= " AND e.especialidad = ?";
-            $params[] = $especialidad;
-            $types .= 's';
+    public function buscarEmpleadoParaServicios($especialidades, $fecha_hora)
+    {
+        // Primero, buscar por especialidad coincidente
+        foreach ($especialidades as $especialidad) {
+            $empleado = $this->buscarEmpleadoDisponiblePorEspecialidad($especialidad, $fecha_hora);
+            if ($empleado) {
+                return $empleado;
+            }
         }
-    
-        if ($fecha_hora) {
-            $sql .= " AND e.id NOT IN (
-                SELECT DISTINCT empleado_id FROM citas 
-                WHERE fecha_hora = ?
-            )";
-            $params[] = $fecha_hora;
-            $types .= 's';
-        }
-    
-        $sql .= " LIMIT 1";
-    
-        $stmt = $this->db->prepare($sql);
-        
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        
+
+        // Si no se encuentra por especialidad, buscar cualquier empleado disponible
+        return $this->buscarEmpleadoDisponibleGeneral($fecha_hora);
+    }
+
+    private function buscarEmpleadoDisponiblePorEspecialidad($especialidad, $fecha_hora)
+    {
+        $query = "SELECT e.id, e.nombre, e.especialidad
+                FROM empleados e
+                WHERE e.activo = 1
+                AND e.especialidad = ?
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM citas c
+                    JOIN cita_servicios cs ON c.id = cs.cita_id
+                    JOIN servicios s ON cs.servicio_id = s.id
+                    WHERE c.empleado_id = e.id
+                    AND (
+                        (c.fecha_hora <= ? AND DATE_ADD(c.fecha_hora, INTERVAL s.duracion_minutos MINUTE) > ?)
+                    OR 
+                        (c.fecha_hora >= ? AND c.fecha_hora < DATE_ADD(?, INTERVAL (SELECT MAX(duracion_minutos) FROM servicios) MINUTE))
+                    )
+                )
+ORDER BY RAND()
+LIMIT 1";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param('sssss', $especialidad, $fecha_hora, $fecha_hora, $fecha_hora, $fecha_hora);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        return $result->fetch_assoc();
-    }  
 
-    public function obtenerDetallesEmpleado($id_empleado) {
+        return $result->num_rows > 0 ? $result->fetch_assoc() : null;
+    }
+
+    private function buscarEmpleadoDisponibleGeneral($fecha_hora)
+    {
+        $query = "SELECT e.id, e.nombre, e.especialidad
+            FROM empleados e
+            WHERE e.activo = 1 
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM citas c
+                    JOIN cita_servicios cs ON c.id = cs.cita_id
+                    JOIN servicios s ON cs.servicio_id = s.id
+                    WHERE c.empleado_id = e.id
+                        AND (
+                            (c.fecha_hora <= ? AND DATE_ADD(c.fecha_hora, INTERVAL s.duracion_minutos MINUTE) > ?)
+                        OR 
+                            (c.fecha_hora >= ? AND c.fecha_hora < DATE_ADD(?, INTERVAL (SELECT MAX(duracion_minutos) FROM servicios) MINUTE))
+                        )
+                    AND c.estado = 'reservada' -- Solo se consideran citas reservadas
+                    )
+                    ORDER BY RAND()
+                    LIMIT 1";
+
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param('ssss', $fecha_hora, $fecha_hora, $fecha_hora, $fecha_hora);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->num_rows > 0 ? $result->fetch_assoc() : null;
+    }
+
+    // Fallback method if no available employees
+    public function obtenerPrimerEmpleadoActivo()
+    {
+        $query = "SELECT id, nombre, especialidad FROM empleados WHERE activo = 1 LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->num_rows > 0 ? $result->fetch_assoc() : null;
+    }
+
+    public function obtenerDetallesEmpleado($id_empleado)
+    {
         $sql = "SELECT id, nombre, especialidad, correo FROM empleados WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $id_empleado);
-        $stmt->execute();    
+        $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function obtenerEmpleadoPorUsuarioId($usuario_id) {
+    public function obtenerEmpleadoPorUsuarioId($usuario_id)
+    {
         // Primero, log de depuración
         error_log("Buscando empleado para usuario ID: $usuario_id");
-    
+
         // Verificar los usuarios existentes
         $sql_usuarios = "SELECT * FROM usuarios WHERE id = ?";
         $stmt_usuarios = $this->db->prepare($sql_usuarios);
@@ -86,10 +140,10 @@ class EmpleadoModel {
         $stmt_usuarios->execute();
         $resultado_usuario = $stmt_usuarios->get_result();
         $usuario = $resultado_usuario->fetch_assoc();
-        
+
         // Log del usuario encontrado
         error_log("Usuario encontrado: " . print_r($usuario, true));
-    
+
         // Listar todos los empleados para verificar
         $sql_empleados = "SELECT * FROM empleados";
         $resultado_empleados = $this->db->query($sql_empleados);
@@ -97,10 +151,10 @@ class EmpleadoModel {
         while ($empleado = $resultado_empleados->fetch_assoc()) {
             $empleados[] = $empleado;
         }
-        
+
         // Log de todos los empleados
         error_log("Empleados existentes: " . print_r($empleados, true));
-    
+
         // Búsqueda del empleado
         $sql = "SELECT * FROM empleados WHERE usuario_id = ?";
         $stmt = $this->db->prepare($sql);
@@ -108,17 +162,17 @@ class EmpleadoModel {
         $stmt->execute();
         $result = $stmt->get_result();
         $empleado = $result->fetch_assoc();
-    
+
         // Log del resultado final
         error_log("Empleado encontrado: " . print_r($empleado, true));
-    
+
         return $empleado;
     }
 
-    public function obtenerPrimerEmpleado() {
+    public function obtenerPrimerEmpleado()
+    {
         $sql = "SELECT * FROM empleados LIMIT 1";
         $resultado = $this->db->query($sql);
         return $resultado->fetch_assoc();
     }
 }
-?>

@@ -11,6 +11,7 @@ class CitaController
                 echo "Error: No se ha iniciado sesión como cliente.";
                 return;
             }
+
             $cliente_id = $_SESSION['cliente_id'];
             $fecha_hora = $_POST['fecha_hora'];
             $servicios = isset($_POST['servicios']) ? array_map('intval', $_POST['servicios']) : [];
@@ -37,18 +38,21 @@ class CitaController
                     return;
                 }
                 $total += $servicio['precio'];
-
-                // Determinar especialidad basada en el servicio
-                $especialidad = $this->determinarEspecialidad($servicio['nombre']);
-                if (!in_array($especialidad, $especialidades)) {
-                    $especialidades[] = $especialidad;
-                }
+                $especialidades[] = $servicio['especialidad'];
             }
+
+            // Eliminar duplicados de especialidades
+            $especialidades = array_unique($especialidades);
 
             // Seleccionar empleado disponible
             try {
                 $empleadoModel = new EmpleadoModel();
-                $empleado = $this->seleccionarEmpleadoParaServicio($servicios, $fecha_hora);
+                $empleado = $empleadoModel->buscarEmpleadoParaServicios($especialidades, $fecha_hora);
+
+                // Si no hay empleados disponibles, intentar obtener el primer empleado activo
+                if (!$empleado) {
+                    $empleado = $empleadoModel->obtenerPrimerEmpleadoActivo();
+                }
 
                 if (!$empleado) {
                     echo "No hay empleados disponibles para los servicios solicitados.";
@@ -62,7 +66,6 @@ class CitaController
                 $resultado = $citaModel->crearCita($cliente_id, $empleado_id, $servicios, $fecha_hora, $total);
 
                 if ($resultado) {
-                    // Mensaje de éxito con detalles del empleado
                     echo "Cita agendada con éxito. Número de cita: {$resultado}";
                     echo "<br>Empleado asignado: {$empleado['nombre']} ({$empleado['especialidad']})";
                     echo "<br><a href='index.php' class='btn btn-secondary'>Volver</a>";
@@ -75,6 +78,7 @@ class CitaController
                 echo "<br><a href='index.php' class='btn btn-secondary'>Volver</a>";
             }
         } else {
+            // Código para mostrar el formulario de cita
             $servicioModel = new ServicioModel();
             $servicios = $servicioModel->obtenerServicios();
             require 'views/agendarCita.php';
@@ -106,42 +110,6 @@ class CitaController
         }
 
         return 'otro';
-    }
-
-    // Método para seleccionar empleado
-    private function seleccionarEmpleadoParaServicio($servicios, $fecha_hora)
-    {
-        $especialidades = [];
-        $servicioModel = new ServicioModel();
-        $empleadoModel = new EmpleadoModel();
-
-        // Determinar especialidades requeridas
-        foreach ($servicios as $servicio_id) {
-            $servicio = $servicioModel->obtenerServicioPorId($servicio_id);
-            $especialidad = $this->determinarEspecialidad($servicio['nombre']);
-
-            if (!in_array($especialidad, $especialidades)) {
-                $especialidades[] = $especialidad;
-            }
-        }
-
-        // Intentar encontrar empleado por especialidad
-        foreach ($especialidades as $especialidad) {
-            $empleado = $empleadoModel->buscarEmpleadoDisponible($especialidad, $fecha_hora);
-            if ($empleado) {
-                return $empleado;
-            }
-        }
-
-        // Si no se encuentra por especialidad, buscar cualquier empleado disponible
-        $empleado = $empleadoModel->buscarEmpleadoDisponible(null, $fecha_hora);
-
-        if ($empleado) {
-            return $empleado;
-        }
-
-        // Si no hay empleados disponibles
-        throw new Exception("No hay empleados disponibles para los servicios solicitados");
     }
 
 
@@ -187,57 +155,50 @@ class CitaController
         require 'views/listarCitasEmpleado.php';
     }
 
-    // Método para asignar empleado a una cita (para admin)
     public function asignarEmpleado()
     {
         // Verificar que solo un admin puede asignar empleados
         $empleadoAdminController = new EmpleadoAdminController();
-        $empleadoAdminController->verificarAcceso(['admin']);
+        if (!$empleadoAdminController->verificarAcceso(['admin'])) {
+            // Si no es admin, redirigir o mostrar error
+            header('Location: /salon/access_denied');
+            exit();
+        }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Imprimir los datos de POST para depuración
+            echo "<pre>";
+            print_r($_POST);
+            echo "</pre>";
+
             $citaId = $_POST['cita_id'];
             $empleadoId = $_POST['empleado_id'];
 
+            // Verificar que los datos no estén vacíos
+            if (empty($citaId) || empty($empleadoId)) {
+                echo "Faltan datos de cita o empleado.";
+                exit();
+            }
+
+            // Llamar al modelo para asignar el empleado a la cita
             $model = new CitaModel();
             $resultado = $model->asignarEmpleadoACita($citaId, $empleadoId);
 
+            // Redirigir dependiendo del resultado
             if ($resultado) {
-                header('Location: /salon/listar_citas&mensaje=Empleado asignado exitosamente');
-                exit();
+                $_SESSION['mensaje'] = 'Empleado asignado exitosamente.';
             } else {
-                header('Location: /salon/listar_citas&error=No se pudo asignar el empleado');
-                exit();
+                $_SESSION['mensaje'] = 'Hubo un error al asignar el empleado.';
             }
+
+            header('Location: /salon/admin_dashboard');
+            exit();
         } else {
-            // Mostrar formulario de asignación
+            // Mostrar formulario de asignación o reasignación
             $model = new CitaModel();
-            $citas_sin_asignar = $model->obtenerCitasSinEmpleado();
+            $citas = $model->obtenerCitas();
             $empleados = $model->obtenerEmpleados();
-
-?>
-            <h1>Asignar Empleado a Cita</h1>
-            <form method="POST" action="/salon/asignar_empleado">
-                <label>Cita:</label>
-                <select name="cita_id">
-                    <?php foreach ($citas_sin_asignar as $cita): ?>
-                        <option value="<?= $cita['id'] ?>">
-                            <?= $cita['id'] ?> - <?= $cita['nombre_cliente'] ?> - <?= $cita['fecha'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-
-                <label>Empleado:</label>
-                <select name="empleado_id">
-                    <?php foreach ($empleados as $empleado): ?>
-                        <option value="<?= $empleado['id'] ?>">
-                            <?= $empleado['nombre'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-
-                <button type="submit">Asignar</button>
-            </form>
-<?php
+            require 'views/asignarEmpleado.php';
         }
     }
 
@@ -371,7 +332,11 @@ class CitaController
             $citaModel = new CitaModel();
             $citaModel->cancelarCita($cita_id);
             echo "Cita cancelada con éxito.";
-            echo "<br><a href='listar_citas' class='btn btn-secondary'>Volver</a>";
+            if ($_SESSION['rol'] == 'cliente') {
+                echo "<br><a href='verCitas' class='btn btn-secondary'>Volver</a>";
+            } else {
+                echo "<br><a href='listar_citas' class='btn btn-secondary'>Volver</a>";
+            }
         }
     }
 
@@ -516,4 +481,3 @@ class CitaController
         }
     }
 }
-?>

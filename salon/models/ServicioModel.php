@@ -1,14 +1,17 @@
 <?php
-class ServicioModel {
+class ServicioModel
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->db = new mysqli('localhost', 'root', '', 'belleza');
     }
 
-    // Obtener un servicio por su ID
-    public function obtenerServicioPorId($servicio_id) {
-        $sql = "SELECT id, nombre, precio FROM servicios WHERE id = ?";
+    // Método para obtener un servicio por su ID (sin cambios)
+    public function obtenerServicioPorId($servicio_id)
+    {
+        $sql = "SELECT id, nombre, precio, duracion_minutos, especialidad FROM servicios WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $servicio_id);
         $stmt->execute();
@@ -16,13 +19,15 @@ class ServicioModel {
     }
 
     // Método para obtener todos los servicios
-    public function obtenerServicios() {
+    public function obtenerServicios()
+    {
         $sql = "SELECT id, nombre, precio FROM servicios";
         $result = $this->db->query($sql);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function obtenerDetallesServicio($servicio_id) {
+    public function obtenerDetallesServicio($servicio_id)
+    {
         $sql = "SELECT id, nombre, precio, duracion_minutos FROM servicios WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $servicio_id);
@@ -30,5 +35,3 @@ class ServicioModel {
         return $stmt->get_result()->fetch_assoc();
     }
 }
-
-?>

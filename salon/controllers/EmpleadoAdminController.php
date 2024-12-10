@@ -2,17 +2,20 @@
 require_once 'models/UsuarioModel.php';
 require_once 'models/EmpleadoModel.php'; // Modelo para la tabla empleados
 
-class EmpleadoAdminController {
+class EmpleadoAdminController
+{
     private $usuarioModel;
     private $empleadoModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->usuarioModel = new UsuarioModel();
         $this->empleadoModel = new EmpleadoModel(); // Instanciar el modelo de empleados
     }
 
     // Método de registro para empleados y admins
-    public function registrar() {
+    public function registrar()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Sanitizar y validar datos
             $nombre = filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_STRING);
@@ -21,13 +24,13 @@ class EmpleadoAdminController {
             $especialidad = filter_input(INPUT_POST, 'especialidad', FILTER_SANITIZE_STRING);
             $telefono = filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_STRING);
             $activo = filter_input(INPUT_POST, 'activo', FILTER_SANITIZE_NUMBER_INT);
-    
+
             // Validaciones
             if (!$email || !$nombre || !$rol || ($rol === 'empleado' && (!$especialidad || !$telefono))) {
                 echo "Datos inválidos";
                 return;
             }
-    
+
             try {
                 // Generar contraseña automática para empleados
                 $password = null;
@@ -43,21 +46,21 @@ class EmpleadoAdminController {
                         return;
                     }
                 }
-    
+
                 // Hashear contraseña
                 $password_hash = password_hash($password, PASSWORD_BCRYPT);
-    
+
                 if ($rol === 'empleado') {
                     // Primero, registrar usuario (pero con empleado_id aún no definido)
                     $resultado_usuario = $this->usuarioModel->registrarUsuario($nombre, $email, $password_hash, $rol);
-                    
+
                     if ($resultado_usuario) {
                         // Obtener el ID del usuario recién insertado
                         $usuarioId = $this->usuarioModel->obtenerSiguienteID() - 1;
-    
+
                         // Registrar empleado con referencia al usuario
                         $resultado_empleado = $this->empleadoModel->registrarEmpleado($nombre, $especialidad, $email, $telefono, $activo, $usuarioId);
-    
+
                         if ($resultado_empleado) {
                             echo "Registro exitoso para empleado. La contraseña generada es: $password";
                         } else {
@@ -71,7 +74,7 @@ class EmpleadoAdminController {
                 } else {
                     // Para administradores, registro directo
                     $resultado = $this->usuarioModel->registrarUsuario($nombre, $email, $password_hash, $rol);
-    
+
                     if ($resultado) {
                         echo "Registro exitoso para administrador.";
                     } else {
@@ -86,9 +89,10 @@ class EmpleadoAdminController {
             require 'views/registroEmpleadoAdmin.php';
         }
     }
-    
+
     // Método auxiliar para eliminar usuario en caso de error
-    private function eliminarUsuario($usuarioId) {
+    private function eliminarUsuario($usuarioId)
+    {
         $sql = "DELETE FROM usuarios WHERE id = ?";
         $stmt = $this->usuarioModel->db->prepare($sql);
         $stmt->bind_param('i', $usuarioId);
@@ -96,14 +100,16 @@ class EmpleadoAdminController {
     }
 
     // Método para generar contraseña automática para empleados
-    private function generarPasswordEmpleado($nombre, $especialidad, $id) {
+    private function generarPasswordEmpleado($nombre, $especialidad, $id)
+    {
         $nombreAbrev = substr(preg_replace('/[^A-Za-z]/', '', $nombre), 0, 3); // Primeras 3 letras del nombre
         $especialidadAbrev = substr(preg_replace('/[^A-Za-z]/', '', $especialidad), 0, 3); // Primeras 3 letras de la especialidad
         return ucfirst($nombreAbrev) . ucfirst($especialidadAbrev) . $id; // Formato: PabMas1
     }
 
     // Método de autenticación para empleados y admins
-    public function autenticar($email, $password) {
+    public function autenticar($email, $password)
+    {
         try {
             $usuarioModel = new UsuarioModel();
             $usuario = $usuarioModel->obtenerUsuarioPorEmail($email);
@@ -143,23 +149,25 @@ class EmpleadoAdminController {
     }
 
     // Método para verificar la contraseña con soporte multi-hash
-    private function verificarPassword($passwordIngresada, $passwordAlmacenada) {
+    private function verificarPassword($passwordIngresada, $passwordAlmacenada)
+    {
         // Verificar si es un hash bcrypt
         if (password_get_info($passwordAlmacenada)['algo'] === PASSWORD_BCRYPT) {
             return password_verify($passwordIngresada, $passwordAlmacenada);
         }
-        
+
         // Verificar si es un hash SHA-256 (64 caracteres)
         if (strlen($passwordAlmacenada) === 64) {
             return hash('sha256', $passwordIngresada) === $passwordAlmacenada;
         }
-        
+
         // Comparación directa como último recurso (no recomendado)
         return $passwordIngresada === $passwordAlmacenada;
     }
 
     // Método para cerrar sesión
-    public function logout() {
+    public function logout()
+    {
         session_start();
         session_destroy();
         header('Location: home');
@@ -167,8 +175,9 @@ class EmpleadoAdminController {
     }
 
     // Verificar si el usuario tiene acceso a una sección específica
-    public function verificarAcceso($rolesPermitidos) {
-        
+    public function verificarAcceso($rolesPermitidos)
+    {
+
         // Si no hay sesión iniciada
         if (!isset($_SESSION['rol'])) {
             header('Location: salon/login');
@@ -186,10 +195,11 @@ class EmpleadoAdminController {
     }
 
     // Método para migrar hashes antiguos a bcrypt
-    public function migrarHashesAntiguos() {
+    public function migrarHashesAntiguos()
+    {
         try {
             $usuarios = $this->usuarioModel->obtenerTodosLosUsuarios();
-            
+
             foreach ($usuarios as $usuario) {
                 // Si el hash no es bcrypt, convertirlo
                 if (strlen($usuario['password']) === 64) {
@@ -197,62 +207,46 @@ class EmpleadoAdminController {
                     $this->usuarioModel->actualizarPasswordUsuario($usuario['id'], $nuevo_hash);
                 }
             }
-            
+
             echo "Migración de hashes completada.";
         } catch (Exception $e) {
             echo "Error en la migración: " . $e->getMessage();
         }
     }
 
-    public function seleccionarEmpleadoParaServicio($servicios) {
-        // Obtener la especialidad requerida para los servicios
+    public function seleccionarEmpleadoParaServicio($servicios, $fecha_hora)
+    {
+        // Validar que $fecha_hora esté definido
+        if (empty($fecha_hora)) {
+            throw new Exception("La fecha y hora son necesarias para seleccionar un empleado.");
+        }
+
+        // Obtener las especialidades requeridas para los servicios
         $servicioModel = new ServicioModel();
         $especialidades = [];
-    
+
         foreach ($servicios as $servicio_id) {
             $servicio = $servicioModel->obtenerServicioPorId($servicio_id);
-            
-            // Mapeo de servicios a especialidades
-            switch ($servicio['nombre']) {
-                case (strpos(strtolower($servicio['nombre']), 'corte') !== false):
-                    $especialidades[] = 'peluquero';
-                    break;
-                case (strpos(strtolower($servicio['nombre']), 'manicura') !== false):
-                    $especialidades[] = 'depilacion';
-                    break;
-                case (strpos(strtolower($servicio['nombre']), 'masaje') !== false):
-                    $especialidades[] = 'maquilladora';
-                    break;
-                default:
-                    $especialidades[] = 'otro';
-            }
+            $especialidades[] = $servicio['especialidad'];
         }
-    
-        // Eliminar duplicados y obtener especialidades únicas
+
+        // Eliminar duplicados
         $especialidades = array_unique($especialidades);
-    
-        // Buscar empleados disponibles con la especialidad requerida
+
+        // Buscar empleados disponibles
         $empleadoModel = new EmpleadoModel();
-        $empleado = null;
-    
-        foreach ($especialidades as $especialidad) {
-            $empleado = $empleadoModel->buscarEmpleadoDisponible($especialidad, $fecha_hora);
-            
-            if ($empleado) {
-                return $empleado['id'];
-            }
+        $empleado = $empleadoModel->buscarEmpleadoParaServicios($especialidades, $fecha_hora);
+
+        // Si no hay empleados disponibles, obtener el primer empleado activo
+        if (!$empleado) {
+            $empleado = $empleadoModel->obtenerPrimerEmpleadoActivo();
         }
-    
-        // Si no se encuentra empleado con la especialidad específica, 
-        // buscar cualquier empleado disponible
-        $empleado = $empleadoModel->buscarEmpleadoDisponible();
-    
-        if ($empleado) {
-            return $empleado['id'];
+
+        // Si aún no hay empleados, lanzar excepción
+        if (!$empleado) {
+            throw new Exception("No hay empleados disponibles para el servicio solicitado.");
         }
-    
-        // Si no hay empleados disponibles
-        throw new Exception("No hay empleados disponibles para el servicio solicitado");
+
+        return $empleado;
     }
 }
-?>

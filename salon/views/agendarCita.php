@@ -10,6 +10,17 @@
     <div class="container mt-5">
         <h1 class="text-center">Agendar una Cita</h1>
         <form method="POST" action="" class="mt-4">
+            <!-- Selección de Empleado -->
+            <!-- <div class="mb-3">
+                <label for="empleado" class="form-label">Empleado</label>
+                <select class="form-select" id="empleado" name="empleado" required>
+                    <?php foreach ($empleados as $empleado): ?>
+                        <option value="<?php echo $empleado['id']; ?>">
+                            <?php echo htmlspecialchars($empleado['nombre']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div> -->
             <!-- Selección de Servicios -->
             <div class="mb-3">
                 <label for="servicios" class="form-label">Servicios</label>

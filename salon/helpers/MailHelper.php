@@ -4,20 +4,26 @@ use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
 require __DIR__ . '/../vendor/autoload.php';
+
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
 class MailHelper {
     public static function enviarCorreoVerificacion($email, $token) {
         $mail = new PHPMailer(true);
 
         try {
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com'; // Cambia esto por tu servidor SMTP
+            $mail->Host = $_ENV['SMTP_HOST'];
             $mail->SMTPAuth = true;
-            $mail->Username = 'pabletor0505@gmail.com';
-            $mail->Password = 'xysd htjj rcyn kdhj';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port = 465;
+            $mail->Username = $_ENV['SMTP_USERNAME'];
+            $mail->Password = $_ENV['SMTP_PASSWORD'];
+            $mail->SMTPSecure = $_ENV['SMTP_SECURE'];
+            $mail->Port = $_ENV['SMTP_PORT'];
 
-            $mail->setFrom('pabletor0505@gmail.com', 'Salon Belleza');
+            $mail->setFrom($_ENV['SMTP_USERNAME'], 'Salon Belleza');
             $mail->addAddress($email);
 
             $mail->isHTML(true);
