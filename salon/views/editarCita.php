@@ -47,6 +47,7 @@
                     method="POST" 
                     action="actualizar_cita?id=<?= htmlspecialchars($cita['cita_id']) ?>" 
                     class="appointment-form"
+                    id="editarCitaForm"
                 >
                     <!-- Hidden Input Fields for Maintaining Context -->
                     <div class="d-none">
@@ -121,9 +122,41 @@
                                 name="total"
                                 value="<?= htmlspecialchars($cita['total']) ?>" 
                                 required
+                                readonly
                             >
                             <span class="input-group-text">€</span>
                         </div>
+                    </div>
+
+                    <!-- Notas Adicionales -->
+                    <div class="mb-3">
+                        <label for="notas" class="form-label">Notas Adicionales</label>
+                        <textarea 
+                            class="form-control" 
+                            id="notas" 
+                            name="notas" 
+                            rows="3"
+                            placeholder="Añade comentarios o instrucciones adicionales"
+                        ><?= isset($cita['notas']) ? htmlspecialchars($cita['notas']) : '' ?></textarea>
+                        <small class="form-text text-muted">
+                            Opcional: Añade notas o comentarios sobre la cita
+                        </small>
+                    </div>
+
+                    <!-- Estado de la Cita -->
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado de la Cita</label>
+                        <select 
+                            class="form-select" 
+                            id="estado" 
+                            name="estado"
+                            <?= ($cita['estado'] == 'completada' || $cita['estado'] == 'cancelada') ? 'disabled' : '' ?>
+                        >
+                            <option value="pendiente" <?= $cita['estado'] == 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
+                            <option value="reservada" <?= $cita['estado'] == 'reservada' ? 'selected' : '' ?>>Reservada</option>
+                            <option value="completada" <?= $cita['estado'] == 'completada' ? 'selected' : '' ?>>Completada</option>
+                            <option value="cancelada" <?= $cita['estado'] == 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                        </select>
                     </div>
 
                     <!-- Action Buttons -->
@@ -140,15 +173,16 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS and Optional Total Calculation Script -->
+    <!-- Bootstrap JS and Validation Script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const serviciosSelect = document.getElementById('servicios');
             const totalInput = document.getElementById('total');
+            const fechaHoraInput = document.getElementById('fecha_hora');
+            const editarCitaForm = document.getElementById('editarCitaForm');
 
-            serviciosSelect.addEventListener('change', calcularTotal);
-
+            // Calcular total de servicios
             function calcularTotal() {
                 const serviciosSeleccionados = Array.from(serviciosSelect.selectedOptions)
                     .map(option => parseFloat(option.text.split(' - ')[1]));
@@ -156,6 +190,39 @@
                 const total = serviciosSeleccionados.reduce((sum, precio) => sum + precio, 0);
                 totalInput.value = total.toFixed(2);
             }
+
+            // Eventos
+            serviciosSelect.addEventListener('change', calcularTotal);
+            
+            // Validación del formulario
+            editarCitaForm.addEventListener('submit', function(event) {
+                // Validar servicios
+                const serviciosSeleccionados = document.querySelectorAll('#servicios option:checked');
+                if (serviciosSeleccionados.length === 0) {
+                    event.preventDefault();
+                    alert('Debe seleccionar al menos un servicio');
+                    return;
+                }
+                
+                // Validar fecha
+                const fechaSeleccionada = new Date(fechaHoraInput.value);
+                const fechaActual = new Date();
+                
+                if (fechaSeleccionada < fechaActual) {
+                    event.preventDefault();
+                    alert('No puedes seleccionar una fecha en el pasado');
+                    return;
+                }
+
+                // Confirmación de actualización
+                const confirmacion = confirm('¿Estás seguro de que deseas actualizar esta cita?');
+                if (!confirmacion) {
+                    event.preventDefault();
+                }
+            });
+
+            // Calcular total inicial
+            calcularTotal();
         });
     </script>
 </body>

@@ -246,6 +246,7 @@ class CitaController
             $fecha_hora = $_POST['fecha_hora'];
             $servicios = isset($_POST['servicios']) ? array_map('intval', $_POST['servicios']) : [];
             $total = $_POST['total'];  // Este valor puede venir del formulario o calcularse
+            $notas = isset($_POST['notas']) ? $_POST['notas'] : ''; // Agregar campo para notas
 
             // Validaciones
             if (empty($cita_id) || empty($cliente_id) || empty($empleado_id) || empty($fecha_hora) || empty($servicios)) {
@@ -263,10 +264,25 @@ class CitaController
             $resultado = $citaModel->actualizarCita($cita_id, $cliente_id, $empleado_id, $servicios, $fecha_hora, $total);
 
             if ($resultado) {
-                echo "Cita actualizada con éxito.";
+                // Actualizar el historial para cada servicio de la cita
+                $historialExitoso = true;
+                foreach ($servicios as $servicio_id) {
+                    $resultadoHistorial = $citaModel->actualizarHistorial($cita_id, $cliente_id, $servicio_id, $fecha_hora, $notas);
+
+                    if (!$resultadoHistorial) {
+                        $historialExitoso = false;
+                        break;
+                    }
+                }
 
                 // Llamar a la función que actualiza el estado de las citas completadas
                 $citaModel->actualizarEstadoCitasCompletadas();
+
+                if ($historialExitoso) {
+                    echo "Cita actualizada con éxito y registrada en el historial.";
+                } else {
+                    echo "Cita actualizada, pero hubo un problema al registrar el historial.";
+                }
 
                 echo "<br><a href='listar_citas' class='btn btn-secondary'>Volver</a>";
             } else {

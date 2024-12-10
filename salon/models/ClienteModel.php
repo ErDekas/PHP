@@ -100,4 +100,12 @@ class ClienteModel
         // Si no coincide con ningún caso, devolver un array vacío
         return [];
     }
+
+    public function historialCliente($id_cliente) {
+        $sql = "SELECT * FROM historial_servicios WHERE cliente_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $id_cliente);
+        $stmt->execute();    
+        return $stmt->get_result()->fetch_assoc();
+    }
 }

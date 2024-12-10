@@ -560,4 +560,11 @@ class CitaModel
             error_log("Error al actualizar el estado de las citas: " . $e->getMessage());
         }
     }
+
+    public function actualizarHistorial($cita_id, $cliente_id, $servicio_id, $fecha, $notas) {
+        $sql = "INSERT INTO historial (cita_id, cliente_id, servicio_id, fecha, notas) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('iiiss', $cita_id, $cliente_id, $servicio_id, $fecha, $notas);
+        return $stmt->execute();
+    }
 }
